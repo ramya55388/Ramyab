@@ -1,0 +1,49 @@
+  - name: install mssql
+    hosts: target1
+    tasks:
+      - name: download the mssql
+        get_url:
+          url: https://packages.microsoft.com/config/rhel/8/mssql-server-2019.repo
+          dest: /etc/yum.repos.d/mssql-server.repo
+
+      - name: to use yum install
+        yum:
+          name: mssql-server
+          state: present
+
+      - name: to run the config setup
+        command: /opt/mssql/bin/mssql-conf -n setup accept-eula
+        environment:
+              - MSSQL_SA_PASSWORD: Password1
+              - MSSQL_PID: Evaluation
+
+
+      - name: configuring firewall
+        firewalld:
+          port: 1433/tcp
+          permanent: true
+          state: enabled
+          zone: public
+
+      - name: to download the cmd repository
+        get_url:
+          url: https://packages.microsoft.com/config/rhel/8/prod.repo
+          dest: /etc/yum.repos.d/msprod.repo
+
+      - name: to use yum install
+        yum:
+          name: mssql-tools  accept-eula
+          state: present
+        environment:
+          accept-eula: YES
+
+      - name: to add the mssql to the path
+        lineinfile:
+          PATH: ~/.bash_profile
+          Line: export PATH="$PATH:/opt/mssql-tools/bin
+
+
+      - name: to add the mssql to the path 2nd step
+        lineinfile:
+          PATH: ~/.bashrc
+          Line: export PATH="$PATH:/opt/mssql-tools/bin
